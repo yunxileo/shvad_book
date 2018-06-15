@@ -30,6 +30,7 @@ get_y = function(df){
 
 X =  get_x(df)
 Y = get_y(df)
+
 theta = as.matrix(c(0,0),ncol = 1 )
 
 lr_cost = function(theta, x, y){
@@ -46,6 +47,7 @@ lr_cost = function(theta, x, y){
 
 
 lr_cost(theta,X,Y)
+
 gradient = function(theta, x, y){
   m = nrow(x) #
   inner = t(x)%*%(x%*%theta -y)

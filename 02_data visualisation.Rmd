@@ -1,0 +1,417 @@
+---
+title: "data visualisation"
+output: 
+  html_notebook: 
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+---
+主要介绍R中最重要的可视化包ggplot2
+
+# 介绍 
+
+ggplot2是一个强大而且灵活的可视化R包。
+
+# 单变量图形
+
+数据概览
+```{r}
+set.seed(1234)
+wdata = data.frame(
+sex = factor(rep(c("F", "M"), each=200)),
+weight = c(rnorm(200, 55), rnorm(200, 58)))
+head(wdata, 4)
+```
+```{r}
+library(dplyr)
+mu <- wdata %>%
+group_by(sex) %>%
+summarise(grp.mean = mean(weight))
+head(mu)
+```
+```{r}
+a <- ggplot(wdata, aes(x = weight))
+```
+
+##  面积图 
+```{r}
+a + geom_area(stat = "bin",
+color= "black", fill="#00AFBB")
+```
+
+```{r}
+a + geom_area(aes(y = ..density..), stat ="bin",color= "black", fill="#00AFBB")
+```
+
+```{r}
+# Load the data
+data("diamonds")
+p <- ggplot(diamonds, aes(x = price, fill = cut))
+p + geom_area(stat = "bin")
+```
+
+## 密度图
+
+```{r}
+a + geom_density()
+a + geom_density(color = "black", fill = "gray")+
+geom_vline(aes(xintercept=mean(weight)),
+color="#FC4E07", linetype="dashed", size=1)
+```
+
+改变颜色
+
+```{r}
+# Change line colors by sex
+a + geom_density(aes(color = sex))
+# Change fill color by sex
+# Use semi-transparent fill: alpha = 0.4
+a + geom_density(aes(fill = sex), alpha=0.4)
+# Add mean lines and color by sex
+a + geom_density(aes(color = sex), alpha=0.4)+
+geom_vline(data = mu, aes(xintercept = grp.mean, color=sex),
+linetype="dashed")
+```
+
+## 直方图 
+
+• Key function: geom_histogram()
+
+• Alternative functions: stat_bin()
+
+• Position adjustments: "identity" (or position_identity()), "stack" (or position_
+stack()), "dodge" ( or position_dodge()). Default value is "stack"
+
+• Key arguments to customize the plot: alpha, color, fill, linetype, size
+
+```{r}
+# 基本直方图
+a + geom_histogram()
+```
+```{r}
+# 调节分组数据
+a + geom_histogram(bins = 80)
+```
+
+```{r}
+# Change line color and fill color, add mean line
+a + geom_histogram(color = "black", fill = "gray")+
+geom_vline(aes(xintercept=mean(weight)),
+color="#FC4E07", linetype="dashed", size=1)
+```
+
+ 
+ 
+```{r}
+# Position adjustment: "identity" (overlaid)
+a + geom_histogram(aes(color = sex), fill = "white", alpha = 0.6,
+position="identity")
+```
+
+## 混合密度直方图 
+
+```{r}
+
+a + geom_histogram(aes(y=..density..), colour="black", fill="white") +
+geom_density(alpha=0.2, fill = "#FF6666")
+
+```
+
+## 经验分布图 
+```{r}
+a + stat_ecdf(geom = "point")
+a + stat_ecdf(geom = "step")
+```
+
+## 条形图
+
+```{r}
+data(mpg)
+ggplot(mpg, aes(fl)) +
+geom_bar(fill = "steelblue")+ theme_minimal()
+```
+
+
+# 多变量图形
+
+## 散点图
+
+### 基本散点图
+```{r, message=FALSE, warning=FALSE}
+b <- ggplot(mtcars, aes(x = wt, y = mpg))
+# 基本散点图
+b + geom_point(color = "#00AFBB")
+# 改变点的颜色和形状 
+b + geom_point(color = "#00AFBB", size = 2, shape = 3)
+# 气泡图
+b + geom_point(aes(size=qsec), color = "#00AFBB")
+
+```
+
+
+### 分组散点图
+
+通过变量来定义形状、颜色、大小
+
+```{r}
+# Change point shapes by the levels of cyl
+b + geom_point(aes(shape = factor(cyl),color = factor(cyl)))
+
+```
+
+自定义形状大小颜色
+
++  scale_shape_manual() for point shapes
++  scale_color_manual() for point colors
++  scale_size_manual() for point sizes
+
+```{r}
+b + geom_point(aes(shape = factor(cyl),color = factor(cyl),size = factor(cyl))) +
+scale_size_manual(values=c(2,3,4))+
+scale_shape_manual(values=c(3, 16, 17))+
+scale_color_manual(values=c('#999999','#E69F00', '#56B4E9'))
+```
+
+### 添加拟合曲线
+
+基本语法
+```r
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+```
+
+```{r}
+# Add regression line without confidence interval
+b + geom_point() +
+geom_smooth(method = lm, se = FALSE)
+# Add regression line with confidence interval
+b + geom_point() + geom_smooth(method = lm, se = T)
+# loess method: local regression fitting
+b + geom_point() + geom_smooth(method = loess,se = T)
+
+# Change color and shape by groups (cyl)
+b + geom_point(aes(color = factor(cyl))) +
+geom_smooth(aes(color = factor(cyl)), method = lm)
+```
+
+## 等高图
+
+```{r}
+data(faithful)
+# Scatter plot
+sp <- ggplot(faithful, aes(x = eruptions, y = waiting))
+# Default plot
+sp + geom_density_2d(color = "#E7B800")
+# Add points
+sp + geom_point(color = "#00AFBB") +
+geom_density_2d(color = "#E7B800")
+```
+
+## 箱形图
+
+```{r}
+data("ToothGrowth")
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+head(ToothGrowth)
+```
+
+```{r}
+e <- ggplot(ToothGrowth, aes(x = dose, y = len))
+# Basic box plot
+e + geom_boxplot()
+# Rotate the box plot
+e + geom_boxplot() + coord_flip()
+# Notched box plot
+e + geom_boxplot(notch = TRUE)
+# Box plot with mean points
+e + geom_boxplot() +
+stat_summary(fun.y = mean, geom = "point",
+shape = 18, size = 4, color = "blue")
+# Choose which items to display: group "0.5" and "2"
+e + geom_boxplot() +
+scale_x_discrete(limits=c("0.5", "2"))
+# Change the default order of items
+e + geom_boxplot() +
+scale_x_discrete(limits=c("2", "0.5", "1"))
+# Use single colors
+e + geom_boxplot(color = "black", fill = "steelblue")
+# Change outline colors by dose (groups)
+e + geom_boxplot(aes(color = dose))
+# Change fill color by dose (groups)
+e + geom_boxplot(aes(fill = dose))
+```
+
+自定义配色
+
++  scale_color_manual(), scale_fill_manual() : to use custom colors
++ scale_color_brewer(), scale_fill_brewer() : to use color palettes from RColor-
+Brewer package
++  scale_color_grey(), scale_fill_grey() : to use grey color palettes
+
+```{r}
+# Use custom color palettes
+e3 <- e + geom_boxplot(aes(fill = dose)) + theme_minimal()
+e3 + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+# Use brewer color palettes
+e3 + scale_fill_brewer(palette="Dark2")
+# Use grey scale
+e3 + scale_fill_grey()
+```
+
+
+多组
+
+```{r}
+# Change box plot colors by groups
+e + geom_boxplot(aes(fill = supp))
+# Change the position
+e + geom_boxplot(aes(fill = supp), position = position_dodge(1))
+# Change fill colors
+e + geom_boxplot(aes(fill = supp), position = position_dodge(1)) +
+scale_fill_manual(values=c("#999999", "#E69F00"))
+```
+
+
+## 折线图 
+
+数据格式 
+
+```{r}
+df <- data.frame(dose=c("D0.5", "D1", "D2"),
+len=c(4.2, 10, 29.5))
+head(df)
+
+df2 <- data.frame(supp=rep(c("VC", "OJ"), each=3),
+dose=rep(c("D0.5", "D1", "D2"),2),
+len=c(6.8, 15, 33, 4.2, 10, 29.5))
+head(df2)
+```
+
+基本函数 
+
+```{r}
+p <- ggplot(data=df, aes(x=dose, y=len, group=1))
+# Basic line plot with points
+p + geom_line() + geom_point()
+# Change line type and color
+p + geom_line(linetype = "dashed", color = "steelblue")+
+geom_point(color = "steelblue")
+
+
+p <- ggplot(df2, aes(x=dose, y=len, group=supp))
+# Change line types and point shapes by groups
+p + geom_line(aes(linetype = supp)) +
+geom_point(aes(shape = supp))
+# Change line types, point shapes and colors
+p + geom_line(aes(linetype=supp, color = supp))+
+geom_point(aes(shape=supp, color = supp))
+```
+
+时序图 
+
+```{r}
+head(economics)
+ggplot(economics, aes(x=date)) +
+geom_line(aes(y = psavert), color = "darkred") +
+geom_line(aes(y = uempmed), color="steelblue", linetype="twodash") +
+theme_minimal()
+```
+
+## 条形图
+
+数据格式 
+
+```{r}
+df <- data.frame(dose=c("D0.5", "D1", "D2"),
+len=c(4.2, 10, 29.5))
+# head(df)
+df2 <- data.frame(supp=rep(c("VC", "OJ"), each=3),
+dose=rep(c("D0.5", "D1", "D2"),2),
+len=c(6.8, 15, 33, 4.2, 10, 29.5))
+```
+
+```{r}
+f <- ggplot(df, aes(x = dose, y = len))
+# Basic bar plot
+f + geom_bar(stat = "identity")
+# Change fill color and add labels at the top (vjust = -0.3)
+f + geom_bar(stat = "identity", fill = "steelblue")+
+geom_text(aes(label = len), vjust = -0.3, size = 3.5)+
+theme_minimal()
+# Label inside bars, vjust = 1.6
+f + geom_bar(stat="identity", fill="steelblue")+
+geom_text(aes(label=len), vjust=1.6, color="white", size=3.5)+
+theme_minimal()
+
+# Change bar plot line colors by groups
+f + geom_bar(aes(color = dose), stat="identity", fill="white")
+# Change bar plot fill colors by groups
+f + geom_bar(aes(fill = dose), stat="identity")
+# Change outline color manually: custom color
+f + geom_bar(aes(color = dose), stat="identity", fill="white") +
+scale_color_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+# Change fill color manually: custom color
+f + geom_bar(aes(fill = dose), stat="identity") +
+scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+```
+
+分组
+
+```{r}
+g <- ggplot(data=df2, aes(x=dose, y=len, fill=supp))
+# Stacked bar plot
+g + geom_bar(stat = "identity")
+# Use position=position_dodge()
+g + geom_bar(stat="identity", position=position_dodge())
+```
+
+添加标签 
+
+```{r}
+# Add labels to a dodged bar plot
+ggplot(data=df2, aes(x=dose, y=len, fill=supp)) +
+geom_bar(stat="identity", position = position_dodge())+
+geom_text(aes(label = len), vjust = 1.6, color = "white",
+position = position_dodge(0.9), size = 3.5)
+```
+
+## 饼图
+
+```{r}
+df <- data.frame(
+group = c("Male", "Female", "Child"),
+value = c(25, 25, 50))
+head(df)
+```
+
+```{r}
+# default plot
+p <- ggplot(df, aes(x="", y = value, fill=group)) +
+geom_bar(width = 1, stat = "identity") +coord_polar("y", start=0)
+p
+
+# Use custom fill color palettes
+p + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+```
+
+
+自定义 
+```{r, message=FALSE, warning=FALSE}
+blank_theme <- theme_minimal()+
+theme(
+axis.title.x = element_blank(),
+axis.title.y = element_blank(),
+axis.text.x=element_blank(),
+panel.border = element_blank(),
+panel.grid=element_blank(),
+axis.ticks = element_blank(),
+plot.title=element_text(size=14, face="bold")
+)
+
+# Apply blank theme
+require(scales)
+p + scale_fill_brewer("Blues") + blank_theme +
+geom_text(aes(y = value/3 + c(0, cumsum(value)[-length(value)]),
+label = percent(value/100)), size=5)
+```
+
+## 

@@ -1,0 +1,232 @@
+---
+title: "R Notebook"
+output: 
+  html_notebook: 
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+---
+
+# 朴素贝叶斯算法 
+
+## 贝叶斯方法
+贝叶斯学派很古老，但是从诞生到一百年前一直不是主流。主流是频率学派。频率学派的权威皮尔逊和费歇尔都对贝叶斯学派不屑一顾，但是贝叶斯学派硬是凭借在现代特定领域的出色应用表现为自己赢得了半壁江山。
+
+
+贝叶斯学派的思想可以概括为先验概率+数据=后验概率。也就是说我们在实际问题中需要得到的后验概率，可以通过先验概率和数据一起综合得到。但是在很多实际应用中，贝叶斯理论很好用，比如垃圾邮件分类，文本分类。
+
+贝叶斯基本公式如下：
+
+$$ P(Y_k|X) = \frac{P(X|Y_k)P(Y_k)}{\sum\limits_{k}P(X|Y =Y_k)P(Y_k)}$$
+
+
+
+## 朴素贝叶斯算法原理
+
+训练数据集
+$$\begin{align*} \\& T = \left\{ \left( x_{1}, y_{1} \right), \left( x_{2}, y_{2} \right), \cdots, \left( x_{N}, y_{N} \right) \right\} \end{align*}  $$ 
+
++  先验概率分布
+
+$P(Y=C_k)(k=1,2,...K)$
+
++  条件概率分布
+
+
+$$P(X=x|Y=C_k) = P(X_1=x_1, X_2=x_2,...X_n=x_n|Y=C_k)$$
+朴素贝叶斯对条件概率分布作了条件独立性的假设，正是由于这一较强的假设，朴素贝叶斯法也由此得名。那么，
+
+$$\begin{align*} \\& P \left( X = x | Y = c_{k} \right) = P \left( X^{\left( 1 \right)} = x^{\left( 1 \right)} , \cdots, X^{\left( n \right)} = x^{\left( n \right)} | Y = c_{k}\right) 
+\\ & \quad\quad\quad\quad\quad\quad = \prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right) \end{align*}   $$
+
+
++  联合概率分布
+
+$$\begin{align} P(X,Y=C_k)  &= P(Y=C_k)P(X=x|Y=C_k) \\&= P(Y=C_k)P(X_1=x_1, X_2=x_2,...X_n=x_n|Y=C_k) \\
+&= P(Y=C_k)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right)  \end{align}$$
+
+
++ 算法推导
+
+
+朴素贝叶斯算法的目标就是给定新测试集$X^{test}$,我们如何判断它属于哪一类？即求$P(Y=C_k|X=X^{(test)})$,推导过程如下：
+
+得
+$$
+\begin{align*} 
+\\ & P \left( Y = c_{k}| X = x \right) = \dfrac{P \left(X = x | Y = c_{k} \right) P \left( Y = c_{k} \right)}{P \left( X = x  \right)} 
+\\ & \quad\quad\quad\quad\quad\quad = \dfrac{P \left(X = x | Y = c_{k} \right) P \left( Y = c_{k} \right)}{\sum_{Y} P \left( X = x, Y = c_{k}  \right)}
+\\ & \quad\quad\quad\quad\quad\quad = \dfrac{P \left(X = x | Y = c_{k} \right) P \left( Y = c_{k} \right)}{\sum_{Y} P \left(X = x | Y = c_{k} \right) P \left( Y = c_{k} \right)}
+\\ & \quad\quad\quad\quad\quad\quad = \dfrac{ P \left( Y = c_{k} \right)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right)}{\sum_{Y} P \left( Y = c_{k} \right)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right)}\end{align*}   
+$$
+
+由于分母是一个固定值，朴素贝叶斯分类器可表示为
+$$\begin{align*} \\& y = f \left( x \right) = \arg \max_{c_{k}} \dfrac{ P \left( Y = c_{k} \right)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right)}{\sum_{Y} P \left( Y = c_{k} \right)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right)}
+\\ & \quad\quad\quad = \arg \max_{c_{k}} P \left( Y = c_{k} \right)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right)\end{align*} 
+$$
+
+
+##  参数估计
+
+### 极大似然估计
+
+1. 先验概率$P \left( Y = c_{k} \right)$的极大似然估计  
+
+$$\begin{align*} \\& P \left( Y = c_{k} \right) = \dfrac{\sum_{i=1}^{N} I \left( y_{i} = c_{k} \right)}{N} \quad  k = 1, 2, \cdots, K\end{align*} 
+$$
+
+2. 设第$j$个特征$x^{\left( j \right)}$可能取值的集合为$\left\{ a_{j1}, a_{j2}, \cdots, a_{j S_{j}} \right\}$，条件概率$P \left( X^{\left( j \right)} = a_{jl} | Y = c_{k} \right)$的极大似然估计
+$$\begin{align*} \\& P \left( X^{\left( j \right)} = a_{jl} | Y = c_{k} \right) ＝ \dfrac{\sum_{i=1}^{N} I \left(x_{i}^{\left( j \right)}=a_{jl}, y_{i} = c_{k} \right)}{\sum_{i=1}^{N} I \left( y_{i} = c_{k} \right)}
+\\ & j = 1, 2, \cdots, n;\quad l = 1, 2, \cdots, S_{j};\quad k = 1, 2, \cdots, K\end{align*}  $$ 
+其中，$x_{i}^{\left( j \right)}$是第$i$个样本的第$j$个特征；$a_{jl}$是第$j$个特征可能取的第$l$个值；$I$是指示函数。
+
+### 贝叶斯估计 
+
+
+1. 条件概率的贝叶斯估计
+$$\begin{align*} \\& P_{\lambda} \left( X^{\left( j \right)} = a_{jl} | Y = c_{k} \right) ＝ \dfrac{\sum_{i=1}^{N} I \left(x_{i}^{\left( j \right)}=a_{jl}, y_{i} = c_{k} \right) + \lambda}{\sum_{i=1}^{N} I \left( y_{i} = c_{k} \right) + S_{j} \lambda} \end{align*}  $$
+
+式中$\lambda \geq 0$。当$\lambda ＝ 0$时，是极大似然估计；当$\lambda ＝ 1$时，称为拉普拉斯平滑。  
+
+
+2. 先验概率的贝叶斯估计
+$$\begin{align*} \\&  P \left( Y = c_{k} \right) = \dfrac{\sum_{i=1}^{N} I \left( y_{i} = c_{k} \right) + \lambda}{N + K \lambda}\end{align*}
+$$
+
+## 算法流程 
+
+朴素贝叶斯算法：
+
+输入：线性可分训练数据集$T = \left\{ \left( x_{1}, y_{1} \right), \left( x_{2}, y_{2} \right), \cdots, \left( x_{N}, y_{N} \right) \right\}$，其中$x_{i}＝ \left( x_{i}^{\left(1\right)},x_{i}^{\left(2\right)},\cdots, x_{i}^{\left(n\right)} \right)^{T}$，$x_{i}^{\left( j \right)}$是第$i$个样本的第$j$个特征，$x_{i}^{\left( j \right)} \in \left\{ a_{j1}, a_{j2}, \cdots, a_{j S_{j}} \right\}$，$a_{jl}$是第$j$个特征可能取的第$l$个值，$j = 1, 2, \cdots, n; l = 1, 2, \cdots, S_{j},y_{i} \in  \left\{ c_{1}, c_{2}, \cdots, c_{K} \right\}$；实例$x$；
+
+输出：实例$x$的分类
+
+1. 计算先验概率及条件概率
+
+$$\begin{align*}  \\ & P \left( Y = c_{k} \right) = \dfrac{\sum_{i=1}^{N} I \left( y_{i} = c_{k} \right)}{N} \quad  k = 1, 2, \cdots, K
+\\ & P \left( X^{\left( j \right)} = a_{jl} | Y = c_{k} \right) ＝ \dfrac{\sum_{i=1}^{N} I \left(x_{i}^{\left( j \right)}=a_{jl}, y_{i} = c_{k} \right)}{\sum_{i=1}^{N} I \left( y_{i} = c_{k} \right)}
+\\ & j = 1, 2, \cdots, n;\quad l = 1, 2, \cdots, S_{j};\quad k = 1, 2, \cdots, K\end{align*} 
+$$
+
+2. 对于给定的实例$x=\left( x^{\left( 1 \right)}, x^{\left( 2 \right)}, \cdots, x^{\left( n \right)}\right)^{T}$，计算
+$$\begin{align*}  \\ & P \left( Y = c_{k} \right)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right) \quad  k=1,2,\cdots,K\end{align*}  $$
+
+3. 确定实例$x$的类别  
+
+$$\begin{align*} \\& y = f \left( x \right) = \arg \max_{c_{k}} P \left( Y = c_{k} \right)\prod_{j=1}^{n} P \left( X^{\left( j \right)} = x^{\left( j \right)} | Y = c_{k} \right)  \end{align*}  
+$$
+例如：
+
+## 算法优缺点
+
+**朴素贝叶斯的主要优点有：**
+
+　　　　1）朴素贝叶斯模型发源于古典数学理论，有稳定的分类效率。
+
+　　　　2）对小规模的数据表现很好，能个处理多分类任务，适合增量式训练，尤其是数据量超出内存时，我们可以一批批的去增量训练。
+
+　　　　3）对缺失数据不太敏感，算法也比较简单，常用于文本分类。
+
+**朴素贝叶斯的主要缺点有：**　　　
+
+　　　　1） 理论上，朴素贝叶斯模型与其他分类方法相比具有最小的误差率。但是实际上并非总是如此，这是因为朴素贝叶斯模型给定输出类别的情况下,假设属性之间相互独立，这个假设在实际应用中往往是不成立的，在属性个数比较多或者属性之间相关性较大时，分类效果不好。而在属性相关性较小时，朴素贝叶斯性能最为良好。对于这一点，有半朴素贝叶斯之类的算法通过考虑部分关联性适度改进。
+
+　　　　2）需要知道先验概率，且先验概率很多时候取决于假设，假设的模型可以有很多种，因此在某些时候会由于假设的先验模型的原因导致预测效果不佳。
+
+　　　　3）由于我们是通过先验和数据来决定后验的概率从而决定分类，所以分类决策存在一定的错误率。
+
+　　　　4）对输入数据的表达形式很敏感。
+
+
+## 朴素贝叶斯R语言实战
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(e1071)
+```
+
+
+#  K近邻算法
+
+最近邻方法（K近邻或k-NN）是另一个非常流行的分类方法。同样，k-NN有时也用于回归问题。和决策树类似，这是最容易理解的分类方法之一。背后的直觉是你和你的邻居相似。更形式化地说，这一方法遵循紧密性假说：如果样本间的距离以足够好的方法衡量，那么相似的样本更可能属于同一分类.
+
+KNN做回归和分类的主要区别在于最后做预测时候的决策方式不同。KNN做分类预测时，一般是选择多数表决法，即训练集里和预测的样本特征最近的K个样本，预测为里面有最多类别数的类别。而KNN做回归时，一般是选择平均法，即最近的K个样本的样本输出的平均值作为回归预测值。
+
+## KNN算法三要素
+
+KNN算法我们主要要考虑三个重要的要素，对于固定的训练集，只要这三点确定了，算法的预测方式也就决定了。这三个最终的要素是
+
++ k值的选取
+
+对于k值的选择，没有一个固定的经验，一般根据样本的分布，选择一个较小的值，可以通过交叉验证选择一个合适的k值。
+
+
+选择较小的k值，就相当于用较小的领域中的训练实例进行预测，训练误差会减小，只有与输入实例较近或相似的训练实例才会对预测结果起作用，与此同时带来的问题是泛化误差会增大，换句话说，K值的减小就意味着整体模型变得复杂，容易发生过拟合；
+
+
+选择较大的k值，就相当于用较大领域中的训练实例进行预测，其优点是可以减少泛化误差，但缺点是训练误差会增大。这时候，与输入实例较远（不相似的）训练实例也会对预测器作用，使预测发生错误，且K值的增大就意味着整体的模型变得简单。
+
+
++ 距离的度量
+
+于距离的度量，我们有很多的距离度量方式，但是最常用的是欧式距离，即对于两个n维向量x和y，两者的距离定义如下：
+
+**欧式距离**
+
+$$D(x,y) = \sqrt{(x_1-y_1)^2 + (x_2-y_2)^2 + ... + (x_n-y_n)^2} = \sqrt{\sum\limits_{i=1}^{n}(x_i-y_i)^2} $$
+
+**曼哈顿距离**
+
+$$D(x,y) =|x_1-y_1| + |x_2-y_2| + ... + |x_n-y_n| =\sum\limits_{i=1}^{n}|x_i-y_i|$$
+
+** 如闵可夫斯基距离(Minkowski Distance)**
+
+$$ D(x,y) =\sqrt[p]{(|x_1-y_1|)^p + (|x_2-y_2|)^p + ... + (|x_n-y_n|)^p} =\sqrt[p]{\sum\limits_{i=1}^{n}(|x_i-y_i|)^p} $$
+
++ 分类决策规则。
+
+对于分类决策规则，一般都是使用前面提到的多数表决法。所以我们重点是关注与k值的选择和距离的度量方式。
+
+## KNN算法实现
+
+K近邻法最简单的实现方法是线性扫描，这时需要计算输入实例与每一个训练实例的距离。当训练集很大时，计算非常耗时，这种方法是不可行的。
+
+为了提高K近邻搜索的效率，可以考虑使用特殊的结构存储数据，以减少计算距离的次数。具体方法有很多，kd树是一种常见的方法。本文不过多的介绍。
+
+## KNN算法优缺点
+
+KNN的主要优点有：
+
+　　　　1） 理论成熟，思想简单，既可以用来做分类也可以用来做回归
+
+　　　　2） 可用于非线性分类
+
+　　　　3） 训练时间复杂度比支持向量机之类的算法低，仅为O(n)
+
+　　　　4） 和朴素贝叶斯之类的算法比，对数据没有假设，准确度高，对异常点不敏感
+
+　　　　5） 由于KNN方法主要靠周围有限的邻近的样本，而不是靠判别类域的方法来确定所属类别的，因此对于类域的交叉或重叠较多的待分样本集来说，KNN方法较其他方法更为适合
+　　　　
+　　　　6）该算法比较适用于样本容量比较大的类域的自动分类，而那些样本容量较小的类域采用这种算法比较容易产生误分
+　　　　
+
+　　　　KNN的主要缺点有：
+
+　　　　1）计算量大，尤其是特征数非常多的时候
+
+　　　　2）样本不平衡的时候，对稀有类别的预测准确率低
+
+　　　　3）KD树，球树之类的模型建立需要大量的内存
+
+　　　　4）使用懒散学习方法，基本上不学习，导致预测时速度比起逻辑回归之类的算法慢
+
+　　　　5）相比决策树模型，KNN模型可解释性不强
+
+
+## KNN与R语言实战 
+
+```{r, message=FALSE, warning=FALSE}
+library(fastknn)
+```
+
+
+

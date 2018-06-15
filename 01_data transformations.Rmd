@@ -1,0 +1,197 @@
+---
+title: "data transformations"
+output: 
+  html_notebook: 
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+---
+
+包的安装和加载
+```r
+install.packages("dplyr") 
+library(dplyr)
+```
+# 数据预览
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(nycflights13)
+head(flights)
+```
+```{r, message=FALSE, warning=FALSE}
+str(flights)
+```
+
+
+# 子集选择与过滤 
+
+`select`选择列
+
+```{r, echo=TRUE}
+# 通过列名选择
+select(head(flights,10),year,month,day,distance) 
+# 选择year:day之间的所有列
+select(flights, year:day)
+```
+
+还有一些函数与select配合使用：
+
+```{r, message=FALSE, warning=FALSE}
+#选取名称中含有字符的列
+select(iris, contains("."))
+# 选取名称以指定字符串结尾的列
+select(iris, ends_with("Length"))
+# 选取名称以指定字符串为首的列
+select(iris, starts_with("Sepal"))
+
+```
+
+`fiter`对行过滤
+
+```{r, echo=TRUE}
+filter(flights,distance>=max(distance),month==9)
+```
+
+
+`arrange`进行排序
+
+```{r}
+arrange(head(flights,10), desc(dep_time))
+```
+
+
+
+`distinct` 根据某列对数据进行去重
+```{r}
+distinct(select(flights, origin, dest))
+
+```
+
+`%>%`管道函数
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
+select(flights,year,month,day,distance) %>% 
+  filter(distance>=max(distance),month==9) %>% 
+  arrange(desc(day))
+
+```
+
+`sample` 随机采样 
+```{r}
+sample_n(flights,10)
+sample_frac(flights, 0.001)
+```
+
+# 增加变量
+
+```{r}
+flights_sml <- select(head(flights,20), 
+  year:day, 
+  ends_with("delay"), 
+  distance, 
+  air_time
+)
+
+mutate(flights_sml,
+  gain = arr_delay - dep_delay,
+  speed = distance / air_time * 60
+)
+```
+
+继续增加变量
+```{r}
+mutate(flights_sml,
+  gain = arr_delay - dep_delay,
+  hours = air_time / 60,
+  gain_per_hour = gain / hours
+)
+```
+
+`transmute`只保持增加的变量
+
+```{r}
+transmute(head(flights,20),
+  gain = arr_delay - dep_delay,
+  hours = air_time / 60,
+  gain_per_hour = gain / hours
+)
+```
+
+# 分组汇总 
+`summarise`
+
+```{r}
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+```
+`group_by`
+
+```{r}
+flights %>%  group_by( year, month) %>% 
+summarise( delay = mean(dep_delay, na.rm = TRUE))
+```
+
+```{r}
+library(ggplot2)
+flights %>% group_by( dest) %>% 
+ summarise(
+  count = n(),
+  dist = mean(distance, na.rm = TRUE),
+  delay = mean(arr_delay, na.rm = TRUE)) %>% 
+  filter(delay, count > 20, dest != "HNL") %>% 
+  ggplot( mapping = aes(x = dist, y = delay)) +
+  geom_point(aes(size = count), alpha = 1/3) +
+  geom_smooth(se = FALSE)
+
+```
+
+group与mutate
+```{r}
+popular_dests  =  flights %>% 
+  group_by(dest) %>% 
+  filter(n() > 365)
+
+popular_dests = popular_dests %>% 
+  filter(arr_delay > 500) %>% 
+  mutate(prop_delay = arr_delay / sum(arr_delay)) %>% 
+  select(year:day, dest, arr_delay, prop_delay)
+popular_dests
+```
+
+# 合并
+```{r}
+a  = data.frame(x1 = c('A','B','C'),x2 = c(1,2,3))
+b = data.frame(x1 = c('A','B','D'),x3 = c('T','F','T'))
+```
+
+`left_join`
+```{r}
+left_join(a,b,by = 'x1')
+```
+
+`right_join`
+```{r}
+right_join(a,b,by = 'x1')
+```
+
+`inner_join`
+```{r}
+inner_join(a,b,by = 'x1')
+```
+
+
+
+# 缺失值填充 
+```{r}
+popular_dests[1,5:6] = NA 
+
+popular_dests
+
+popular_dests  %>%
+  group_by(month) %>% 
+  mutate_at(funs(replace(., which(is.na(.)),
+                           mean(., na.rm=TRUE)))
+            ,.vars = c('arr_delay','prop_delay'))
+
+```
+

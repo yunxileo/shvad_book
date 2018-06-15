@@ -1,0 +1,168 @@
+---
+title: "R Basic"
+output: 
+  html_notebook: 
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+---
+
+# 数据结构 
+
+R有很多用于存储对象的数据类型，包括标量、向量、矩阵、数组、数据框以及列表。
+
+## 向量 
+向量是用于存储数值型、字符型或逻辑型数据的一维数组。执行组合功能的函数c()可用来创建向量。各类向量如下例所示：
+
+```{r}
+a = c(1,3,5,-1,0)
+b = c('I','am','chinese')
+d = c(TRUE,TRUE,FALSE)
+a;b;d
+```
+这里，a是数值型向量，b是字符型向量，而d是逻辑型向量。 注意，单个向量中的数据必须
+拥有相同的类型或模式（数值型、字符型或逻辑型）。同一向量中无法混杂不同模式的数据。
+
+
+## 矩阵
+
+矩阵是一个二维数组，只是每个元素都拥有相同的模式（数值型、字符型或逻辑型）。可通
+过函数matrix()创建矩阵。一般使用格式为：
+```{r}
+str(args(matrix))
+```
+其中data包含了矩阵的元素，nrow和ncol用以指定行和列的维数，dimnames包含了可选
+的、以字符型向量表示的行名和列名。选项byrow则表明矩阵应当按行填充（byrow=TRUE）
+还是按列填充（byrow=FALSE），默认情况下按列填充
+
+按列填充
+
+```{r}
+y = matrix(1:12,nrow = 3,ncol = 4)
+y
+```
+
+按行填充
+```{r}
+y = matrix(1:12,nrow = 3,ncol = 4,byrow = T)
+y
+```
+
+我们可以使用下标和方括号来选择矩阵中的行、列或元素。X[i,]指矩阵X中的第i行，X[,j]
+指第j列，X[i, j]指第i行第j 个元素。选择多行或多列时，下标i和j可为数值型向量。
+
+矩阵下标使用: 
+
+```{r}
+y = matrix(1:12,nrow = 3,ncol = 4,byrow = T)
+y
+y[1,]
+y[,2]
+y[1,2]
+```
+
+矩阵都是二维的，和向量类似，矩阵中也仅能包含一种数据类型。当维度超过2时，那么可以使用数组。
+
+## 数组
+
+数组（array）与矩阵类似，但是维度可以大于2。数组可通过array函数创建，形式如下：
+```{r}
+str(args(array))
+```
+其中data包含了数组中的数据，dim是一个数值型向量，给出了各个维度下标的最大
+值，而dimnames是可选的、各维度名称标签的列表。
+
+创建一个三维（2×3×4）数组：
+```{r}
+dim1 <- c("A1", "A2")
+dim2 <- c("B1", "B2", "B3")
+dim3 <- c("C1", "C2", "C3", "C4")
+z <- array(1:24, c(2, 3, 4), dimnames=list(dim1, dim2, dim3))
+z
+```
+像矩阵一
+样，数组中的数据也只能拥有一种模式。从数组中选取元素的方式与矩阵相同。
+
+## 数据框
+`数据框`不同的列可以包含不同的数据类型，是R里面最常用的数据结构。
+
+数据框通过`data.frame()`创建：
+
+```r
+mydata <- data.frame(col1, col2, col3,...)
+```
+其中的列向量col1、col2、col3等可为任何类型（如字符型、数值型或逻辑型）。每一列的名
+称可由函数names指定.
+
+创建一个数据框：
+
+```{r}
+uid = c(1,2,3,4)
+age = c(15,18,25,20)
+educated = c('H','M','S','L')
+info = data.frame(uid,age,educated)
+info
+```
+
+选取数据框中的元素：
+```{r}
+info[1,]
+info[,2]
+info[c('uid','age')]
+info$educated
+```
+在R的数据框中,`$`用来选取某个特定的变量。
+
+## 因子
+类别变量在R中称为因子(factor)
+
+无序类别变量
+
+```{r}
+fruit = c('apple','orange','grape','apple','orange')
+fruit = factor(fruit)
+fruit
+```
+
+有序类别变量 
+
+```{r}
+fruit = c('apple','orange','grape','apple','orange')
+fruit = factor(fruit,ordered = T)
+fruit
+```
+
+自定义因子水平
+
+```{r}
+fruit = c('apple','orange','grape','apple','orange')
+fruit = factor(fruit,ordered = T,levels = c('orange','grape','apple'))
+fruit
+```
+
+## 列表 
+列表（list）是R的数据类型中最为复杂的一种。一般来说，列表就是一些对象（或成分，
+component）的有序集合。列表允许你整合若干（可能无关的）对象到单个对象名下。例如，
+某个列表中可能是若干向量、矩阵、数据框，甚至其他列表的组合。可以使用函数list()创
+建列表：
+```r
+mylist <- list(name1=object1, name2=object2, ...)
+
+```
+
+创建列表
+```{r}
+A = "huang xiao ming"
+B = c(1,2,3,4,5)
+C = matrix(1:10,nrow = 5)
+D = c('orange','grape','apple','grape')
+mylist = list(name = A , type = B,C,D)
+mylist
+mylist[[1]]
+mylist[['name']]
+```
+
+#  数据输入输出 
+
+
+
